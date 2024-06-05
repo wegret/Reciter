@@ -9,6 +9,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            min-height: 100vh;
         }
 
         button {
@@ -60,32 +61,46 @@
             z-index: 1;
             white-space: nowrap;
         }
+
+        #content {
+            flex: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            width: 100%;
+            margin-top: auto;
+            color: #e0e0e0;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Reciter!</h1>
-    <div id="overall-stats"></div>
+    <div id="content">
+        <h1>Reciter!</h1>
+        <div id="overall-stats"></div>
 
-    <div id="progress-container">
-        <div id="progress-bar-completed"></div>
-        <div id="progress-bar-visited"></div>
+        <div id="progress-container">
+            <div id="progress-bar-completed"></div>
+            <div id="progress-bar-visited"></div>
+        </div>
+
+        <button id="next-question">下一题</button>
+
+        <div id="quiz-container">
+            <div id="question-type"></div>
+            <div id="question-title"></div>
+            <div id="options-container"></div>
+        </div>
+
+        <button id="submit-answer">提交答案</button>
+        <div id="result"></div>
+        <button id="prev-question">上一题</button>
+        <div id="message">The question bank is not empty!</div>
+
+        <button id="clear-cache">清空缓存</button>
     </div>
-
-    <button id="next-question">下一题</button>
-
-    <div id="quiz-container">
-        <div id="question-type"></div>
-        <div id="question-title"></div>
-        <div id="options-container"></div>
-    </div>
-
-    <button id="submit-answer">提交答案</button>
-    <div id="result"></div>
-    <button id="prev-question">上一题</button>
-    <div id="message">The question bank is not empty!</div>
-
-    <button id="clear-cache">清空缓存</button>
 
     <script>
         let questions = []; // 题库
@@ -97,10 +112,12 @@
 
         /* 清空缓存 */
         function clearCache() {
-            localStorage.removeItem('quiz_stats');
-            history_update();
-            updateProgressBar();
-            alert('缓存已清空');
+            if (confirm("是否清空所有做题记录？")) {
+                localStorage.removeItem('quiz_stats');
+                history_update();
+                updateProgressBar();
+                alert('缓存已清空');
+            }
         }
         document.getElementById('clear-cache').addEventListener('click', clearCache);
 
@@ -375,6 +392,9 @@
         question_init();
 
     </script>
+    <footer>
+        <a href="https://github.com/wegret/Reciter/" target="_blank">GitHub</a>
+    </footer>
 </body>
 
 </html>
