@@ -25,12 +25,31 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+
+        #progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 25px;
+            margin: 20px 0;
+        }
+
+        #progress-bar {
+            height: 20px;
+            width: 0%;
+            background-color: #76c7c0;
+            border-radius: 25px;
+            transition: width 0.5s;
+        }
     </style>
 </head>
 
 <body>
     <h1>Reciter!</h1>
     <div id="overall-stats"></div>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
 
 
     <button id="next-question">下一题</button>
@@ -46,10 +65,22 @@
     <button id="prev-question">上一题</button>
     <div id="message">The question bank is not empty!</div>
 
+    <button id="clear-cache">清空缓存</button>
+
+
     <script>
         let questions = []; // 题库
         let prev_question = null;   // 上次题目
         let current_question = null;    // 当前题目
+
+        /* 清空缓存 */
+        function clearCache() {
+            localStorage.removeItem('quiz_stats');
+            history_update();
+            updateProgressBar();
+            alert('缓存已清空');
+        }
+        document.getElementById('clear-cache').addEventListener('click', clearCache);
 
         async function question_init() {
             try {
@@ -162,7 +193,7 @@
 
             const resultContainer = document.getElementById('result');
             resultContainer.innerHTML = '';
-            
+
         }
 
         /* 判题并统计 */
@@ -230,10 +261,10 @@
             }
 
             const overallStatsContainer = document.getElementById('overall-stats');
-            if (totalAttempts)
-                overallStatsContainer.innerHTML = `
+            overallStatsContainer.innerHTML = `
         <p>正确率：${totalAttempts ? ((totalCorrect / totalAttempts) * 100).toFixed(2) : 0}%</p>
     `;
+            updateProgressBar();
         }
 
 
@@ -262,7 +293,26 @@
             displayOverallStats();
         }
 
+        /* 更新进度条 */
+        function updateProgressBar() {
+            let stats = localStorage.getItem('quiz_stats');
+            if (!stats) {
+                stats = {};
+            } else {
+                stats = JSON.parse(stats);
+            }
 
+            let totalQuestions = questions.length;
+            let completedQuestions = Object.keys(stats).length - 1;
+
+            let progressPercentage = (completedQuestions / totalQuestions) * 100;
+            let progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = progressPercentage + '%';
+            if (completedQuestions)
+                progressBar.innerText = `已完成 ${completedQuestions} / ${totalQuestions} (${progressPercentage.toFixed(2)}%)`;
+            else
+                progressBar.innerText = null;
+        }
 
         document.getElementById('next-question').addEventListener('click', question_next);
         document.getElementById('submit-answer').addEventListener('click', question_check);
