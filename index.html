@@ -79,6 +79,7 @@
 <body>
     <div id="content">
         <h1>Reciter!</h1>
+        <div id="total_count_number"></div>
         <div id="overall-stats"></div>
 
         <div id="progress-container">
@@ -103,6 +104,8 @@
     </div>
 
     <script>
+        let total_count = 0;
+
         let questions = []; // 题库
         let prev_question = null;   // 上次题目
         let current_question = null;    // 当前题目
@@ -171,6 +174,8 @@
             const storedWrongQuestions = localStorage.getItem('question_wrong');
             if (storedWrongQuestions)
                 question_wrong = JSON.parse(storedWrongQuestions);
+
+            total_count = parseInt(localStorage.getItem('total_exercise_count'));
 
             question_next();
             displayOverallStats();
@@ -293,6 +298,8 @@
 
         /* 计算并显示总体正确率 */
         function displayOverallStats() {
+            document.getElementById('total_count_number').innerHTML = `<p>练习次数：${total_count ? total_count : 0}`;
+
             let stats = localStorage.getItem('quiz_stats');
             if (!stats) {
                 stats = {};
@@ -320,6 +327,11 @@
 
         /* 更新统计信息 */
         function history_update(questionId, isCorrect) {
+            if (total_count)
+                total_count = total_count + 1;
+            else
+                total_count = 1;
+
             let stats = localStorage.getItem('quiz_stats');
             if (!stats) {
                 stats = {};
@@ -342,16 +354,17 @@
             }
             else {
                 // 添加做错的题目
-                if (!question_wrong.some(question => question.id === questionId)) {
-                    const wrongQuestion = questions.find(question => question.id === questionId);
-                    if (wrongQuestion) {
-                        question_wrong.push(wrongQuestion);
-                    }
+                //    if (!question_wrong.some(question => question.id === questionId)) {   // 允许多次添加
+                const wrongQuestion = questions.find(question => question.id === questionId);
+                if (wrongQuestion) {
+                    question_wrong.push(wrongQuestion);
                 }
+                //    }
             }
 
             localStorage.setItem('quiz_stats', JSON.stringify(stats));
             localStorage.setItem('question_wrong', JSON.stringify(question_wrong));
+            localStorage.setItem('total_exercise_count', total_count.toString());
 
             displayOverallStats();
         }
