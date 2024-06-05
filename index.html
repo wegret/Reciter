@@ -20,11 +20,15 @@
 
 <body>
     <h1>Reciter!</h1>
+    <button id="next-question">Next Question</button>
+    
     <div id="quiz-container">
         <div id="question-title"></div>
         <div id="options-container"></div>
     </div>
-    <button id="next-question">Next Question</button>
+
+    <button id="submit-answer">Submit Answer</button>
+
     <div id="result"></div>
     <div id="message">The question bank is not empty!</div>
 
@@ -55,19 +59,43 @@
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
 
-            current_question.options.forEach((option, index) => {
+            if (current_question.type.startsWith("单选")) {
+                current_question.options.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.innerHTML = `
+                            <input type="radio" name="option" value="${index}" id="option${index}">
+                            <label for="option${index}">${option}</label>
+                        `;
+                    optionsContainer.appendChild(optionElement);
+                });
+            } else if (current_question.type.startsWith("多选")) {
+                current_question.options.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.innerHTML = `
+                            <input type="checkbox" name="option" value="${index}" id="option${index}">
+                            <label for="option${index}">${option}</label>
+                        `;
+                    optionsContainer.appendChild(optionElement);
+                });
+            } else {
                 const optionElement = document.createElement('div');
                 optionElement.className = 'option';
                 optionElement.innerHTML = `
-                        <input type="radio" name="option" value="${index}" id="option${index}">
-                        <label for="option${index}">${option}</label>
+                        <input type="text" id="user-answer" placeholder="请输入答案">
                     `;
                 optionsContainer.appendChild(optionElement);
-            });
+            }
+        }
 
+        /* 判题并统计 */
+        function question_check(){
+            
         }
 
         document.getElementById('next-question').addEventListener('click', question_update);
+        document.getElementById('submit-answer').addEventListener('click', question_check);
 
         question_init();
 
