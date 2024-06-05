@@ -182,10 +182,10 @@
         }
 
         /* 随机返回题目 */
-        const p = 3;    // 1/3的概率，从错题里面抽题
+        const p_wrong = 3;    // 1/3的概率，从错题里面抽题
         function question_random() {
-            const randomNum = Math.random();
-            if (randomNum < 1 / p && question_wrong.length > 0) {
+            let randomNum = Math.random();
+            if (randomNum < 1 / p_wrong && question_wrong.length > 0) {
                 const index = Math.floor(Math.random() * question_wrong.length);
                 return question_wrong[index];
             } else {
