@@ -30,7 +30,10 @@
 
 <body>
     <h1>Reciter!</h1>
-    <button id="next-question">Next Question</button>
+    <div id="overall-stats"></div>
+
+
+    <button id="next-question">下一题</button>
 
     <div id="quiz-container">
         <div id="question-type"></div>
@@ -38,16 +41,14 @@
         <div id="options-container"></div>
     </div>
 
-    <button id="submit-answer">Submit Answer</button>
-
+    <button id="submit-answer">提交答案</button>
     <div id="result"></div>
-    <!--<button id="revoke-history">撤销作答记录</button>-->
-    
-
+    <button id="prev-question">上一题</button>
     <div id="message">The question bank is not empty!</div>
 
     <script>
         let questions = []; // 题库
+        let prev_question = null;   // 上次题目
         let current_question = null;    // 当前题目
 
         async function question_init() {
@@ -97,7 +98,8 @@
                     }
                 ];
             }
-            question_update();
+            question_next();
+            displayOverallStats();
         }
 
         /* 随机返回题目 */
@@ -106,9 +108,23 @@
             return questions[index];
         }
 
+        /* 返回上一题 */
+        function question_back() {
+            if (prev_question) {
+                current_question = prev_question;
+                question_update();
+            }
+        }
+
+        /* 随机下一题 */
+        function question_next() {
+            prev_question = current_question;
+            current_question = question_random();
+            question_update();
+        }
+
         /* 更新当前题目并显示 */
         function question_update() {
-            current_question = question_random();
             document.getElementById('question-type').innerText = current_question.type + "\n\n";
             document.getElementById('question-title').innerText = current_question.title;
             const optionsContainer = document.getElementById('options-container');
@@ -146,6 +162,7 @@
 
             const resultContainer = document.getElementById('result');
             resultContainer.innerHTML = '';
+            
         }
 
         /* 判题并统计 */
@@ -183,7 +200,7 @@
 
             const resultMessage = document.createElement('div');
             resultMessage.innerHTML = `
-        <p>正确答案：${correctAnswer}</p>
+        <p>参考答案：${current_question.correct_answer}</p>
         <p>你的答案：${userAnswer}</p>
         <p>结果：${isCorrect ? '正确' : '错误'}</p>
     `;
@@ -191,6 +208,32 @@
             resultContainer.appendChild(resultMessage);
 
             history_update(current_question.id, isCorrect);
+        }
+
+        /* 计算并显示总体正确率 */
+        function displayOverallStats() {
+            let stats = localStorage.getItem('quiz_stats');
+            if (!stats) {
+                stats = {};
+            } else {
+                stats = JSON.parse(stats);
+            }
+
+            let totalAttempts = 0;
+            let totalCorrect = 0;
+
+            for (let key in stats) {
+                if (stats.hasOwnProperty(key)) {
+                    totalAttempts += stats[key].attempts;
+                    totalCorrect += stats[key].correct;
+                }
+            }
+
+            const overallStatsContainer = document.getElementById('overall-stats');
+            if (totalAttempts)
+                overallStatsContainer.innerHTML = `
+        <p>正确率：${totalAttempts ? ((totalCorrect / totalAttempts) * 100).toFixed(2) : 0}%</p>
+    `;
         }
 
 
@@ -215,29 +258,15 @@
                 stats[questionId].correct += 1;
 
             localStorage.setItem('quiz_stats', JSON.stringify(stats));
-        }
 
-        /* 撤销这次作答记录 */
-        function history_revoke() {
-            let questionId = current_question.id;
-            let stats = localStorage.getItem('quiz_stats');
-            stats = JSON.parse(stats);
-            stats[questionId].attempts -= 1;
-            if (isCorrect)
-                stats[questionId].correct -= 1;
-            localStorage.setItem('quiz_stats', JSON.stringify(stats));
-        }
-
-        function history_clear() {
-            let questionId = current_question.id;
-            let stats = {};
-            localStorage.setItem('quiz_stats', JSON.stringify(stats));
+            displayOverallStats();
         }
 
 
-        document.getElementById('next-question').addEventListener('click', question_update);
+
+        document.getElementById('next-question').addEventListener('click', question_next);
         document.getElementById('submit-answer').addEventListener('click', question_check);
-        //document.getElementById('revoke-history').addEventListener('click', history_revoke);
+        document.getElementById('prev-question').addEventListener('click', question_back);
 
 
         question_init();
