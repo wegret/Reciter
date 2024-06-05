@@ -11,6 +11,10 @@
             margin: 20px;
         }
 
+        button {
+            margin: 5px;
+        }
+
         #message {
             display: none;
             color: green;
@@ -88,6 +92,9 @@
         let prev_question = null;   // 上次题目
         let current_question = null;    // 当前题目
 
+        let question_wrong = [];    // 做错的题
+        // let question_unfold = [];   // 未做对的题
+
         /* 清空缓存 */
         function clearCache() {
             localStorage.removeItem('quiz_stats');
@@ -144,14 +151,25 @@
                     }
                 ];
             }
+            const storedWrongQuestions = localStorage.getItem('question_wrong');
+            if (storedWrongQuestions)
+                question_wrong = JSON.parse(storedWrongQuestions);
+
             question_next();
             displayOverallStats();
         }
 
         /* 随机返回题目 */
+        const p = 3;    // 1/3的概率，从错题里面抽题
         function question_random() {
-            const index = Math.floor(Math.random() * questions.length);
-            return questions[index];
+            const randomNum = Math.random();
+            if (randomNum < 1 / p && question_wrong.length > 0) {
+                const index = Math.floor(Math.random() * question_wrong.length);
+                return question_wrong[index];
+            } else {
+                const index = Math.floor(Math.random() * questions.length);
+                return questions[index];
+            }
         }
 
         /* 返回上一题 */
@@ -300,10 +318,23 @@
             }
 
             stats[questionId].attempts += 1;
-            if (isCorrect)
+            if (isCorrect) {
                 stats[questionId].correct += 1;
+                // 移除正确答案从 question_wrong 中
+                question_wrong = question_wrong.filter(question => question.id !== questionId);
+            }
+            else {
+                // 添加做错的题目
+                if (!question_wrong.some(question => question.id === questionId)) {
+                    const wrongQuestion = questions.find(question => question.id === questionId);
+                    if (wrongQuestion) {
+                        question_wrong.push(wrongQuestion);
+                    }
+                }
+            }
 
             localStorage.setItem('quiz_stats', JSON.stringify(stats));
+            localStorage.setItem('question_wrong', JSON.stringify(question_wrong));
 
             displayOverallStats();
         }
@@ -332,7 +363,7 @@
 
             progressBarCompleted.style.width = progressCompletedPercentage + '%';
             progressBarCompleted.innerText = `${correctQuestions} / ${totalQuestions} (${progressCompletedPercentage.toFixed(2)}%)`;
-            
+
         }
 
 
