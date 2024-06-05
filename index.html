@@ -15,14 +15,25 @@
             display: none;
             color: green;
         }
+
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 
 <body>
     <h1>Reciter!</h1>
     <button id="next-question">Next Question</button>
-    
+
     <div id="quiz-container">
+        <div id="question-type"></div>
         <div id="question-title"></div>
         <div id="options-container"></div>
     </div>
@@ -30,6 +41,9 @@
     <button id="submit-answer">Submit Answer</button>
 
     <div id="result"></div>
+    <!--<button id="revoke-history">撤销作答记录</button>-->
+    
+
     <div id="message">The question bank is not empty!</div>
 
     <script>
@@ -39,11 +53,51 @@
         async function question_init() {
             try {
                 const response = await fetch('question.json');
+                if (!response.ok) throw new Error('Network response was not ok');
                 questions = await response.json();
-                question_update();
             } catch (error) {
                 console.error('Error loading questions:', error);
+                // 本地测试时的虚拟题库初始化
+                questions = [
+                    {
+                        "id": "77",
+                        "type": "多选题(分值1.0 分 难度：易)",
+                        "title": "推进中国式现代化需要正确处理的重大关系是（  ）。",
+                        "options": [
+                            "A.正确处理顶层设计与实践探索的关系",
+                            "B.正确处理战略与策略的关系",
+                            "C.正确处理守正与创新的关系",
+                            "D.正确处理效率与公平的关系",
+                            "E.正确处理独立自主与对外开放的关系"
+                        ],
+                        "correct_answer": "ABCDE"
+                    }, {
+                        "id": "78",
+                        "type": "填空题(分值1.0 分 难度：易)",
+                        "title": "（         ）源远流长、博大精深，是中华民族独特的精神标识，是当代中国文化的根基，是维系全世界华人的精神纽带。",
+                        "options": [],
+                        "correct_answer": "参考答案中华文明"
+                    }, {
+                        "id": "84",
+                        "type": "判断题(分值1.0 分 难度：易)",
+                        "title": "共同富裕是中国特色社会主义的本质要求，我国很快就实现共同富裕。",
+                        "options": [],
+                        "correct_answer": "正确答案错"
+                    }, {
+                        "id": "90",
+                        "type": "单选题(分值1.0 分 难度：易)",
+                        "title": "维护党中央权威和集中统一领导，最关键的是（  ）",
+                        "options": [
+                            "A.实行民主集中制",
+                            "B.坚决维护习近平同志党中央的核心、全党的核心地位",
+                            "C.修改党章，加强党中央权力",
+                            "D.严明政治纪律"
+                        ],
+                        "correct_answer": "B"
+                    }
+                ];
             }
+            question_update();
         }
 
         /* 随机返回题目 */
@@ -55,47 +109,136 @@
         /* 更新当前题目并显示 */
         function question_update() {
             current_question = question_random();
+            document.getElementById('question-type').innerText = current_question.type + "\n\n";
             document.getElementById('question-title').innerText = current_question.title;
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
 
-            if (current_question.type.startsWith("单选")) {
+            const questionType = current_question.type;
+
+            if (questionType.includes('单选')) {
                 current_question.options.forEach((option, index) => {
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
                     optionElement.innerHTML = `
-                            <input type="radio" name="option" value="${index}" id="option${index}">
-                            <label for="option${index}">${option}</label>
-                        `;
+                        <input type="radio" name="option" value="${index}" id="option${index}">
+                        <label for="option${index}">${option}</label>
+                    `;
                     optionsContainer.appendChild(optionElement);
                 });
-            } else if (current_question.type.startsWith("多选")) {
+            } else if (questionType.includes('多选')) {
                 current_question.options.forEach((option, index) => {
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
                     optionElement.innerHTML = `
-                            <input type="checkbox" name="option" value="${index}" id="option${index}">
-                            <label for="option${index}">${option}</label>
-                        `;
+                        <input type="checkbox" name="option" value="${index}" id="option${index}">
+                        <label for="option${index}">${option}</label>
+                    `;
                     optionsContainer.appendChild(optionElement);
                 });
             } else {
-                const optionElement = document.createElement('div');
-                optionElement.className = 'option';
-                optionElement.innerHTML = `
-                        <input type="text" id="user-answer" placeholder="请输入答案">
-                    `;
-                optionsContainer.appendChild(optionElement);
+                const inputElement = document.createElement('input');
+                inputElement.type = 'text';
+                inputElement.name = 'option';
+                inputElement.id = 'option0';
+                optionsContainer.appendChild(inputElement);
             }
+
+            const resultContainer = document.getElementById('result');
+            resultContainer.innerHTML = '';
         }
 
         /* 判题并统计 */
-        function question_check(){
-            
+        function question_check() {
+            const resultContainer = document.getElementById('result');
+            resultContainer.innerHTML = '';
+
+            const questionType = current_question.type;
+
+            let userAnswer = '';
+            if (questionType.includes('单选')) {
+                const selectedOption = document.querySelector('input[name="option"]:checked');
+                if (selectedOption) {
+                    userAnswer = selectedOption.nextElementSibling.textContent.charAt(0);
+                }
+            } else if (questionType.includes('多选')) {
+                const selectedOptions = document.querySelectorAll('input[name="option"]:checked');
+                selectedOptions.forEach(option => {
+                    userAnswer += option.nextElementSibling.textContent.charAt(0);
+                });
+                userAnswer = userAnswer.split('').sort().join('');
+            } else {
+                const userInput = document.getElementById('option0').value.trim();
+                userAnswer = userInput;
+            }
+
+            const correctAnswer = current_question.correct_answer.replace(/[^A-Z]/g, '');
+
+            let isCorrect = false;
+            if (questionType.includes('单选') || questionType.includes('多选')) {
+                isCorrect = userAnswer === correctAnswer;
+            } else {
+                isCorrect = confirm(`正确答案是：${current_question.correct_answer}\n你的答案是：${userAnswer}\n是否标记为正确？`);
+            }
+
+            const resultMessage = document.createElement('div');
+            resultMessage.innerHTML = `
+        <p>正确答案：${correctAnswer}</p>
+        <p>你的答案：${userAnswer}</p>
+        <p>结果：${isCorrect ? '正确' : '错误'}</p>
+    `;
+            resultMessage.classList.add(isCorrect ? 'correct' : 'incorrect');
+            resultContainer.appendChild(resultMessage);
+
+            history_update(current_question.id, isCorrect);
         }
+
+
+        /* 更新统计信息 */
+        function history_update(questionId, isCorrect) {
+            let stats = localStorage.getItem('quiz_stats');
+            if (!stats) {
+                stats = {};
+            } else {
+                stats = JSON.parse(stats);
+            }
+
+            if (!stats[questionId]) {
+                stats[questionId] = {
+                    attempts: 0,
+                    correct: 0
+                };
+            }
+
+            stats[questionId].attempts += 1;
+            if (isCorrect)
+                stats[questionId].correct += 1;
+
+            localStorage.setItem('quiz_stats', JSON.stringify(stats));
+        }
+
+        /* 撤销这次作答记录 */
+        function history_revoke() {
+            let questionId = current_question.id;
+            let stats = localStorage.getItem('quiz_stats');
+            stats = JSON.parse(stats);
+            stats[questionId].attempts -= 1;
+            if (isCorrect)
+                stats[questionId].correct -= 1;
+            localStorage.setItem('quiz_stats', JSON.stringify(stats));
+        }
+
+        function history_clear() {
+            let questionId = current_question.id;
+            let stats = {};
+            localStorage.setItem('quiz_stats', JSON.stringify(stats));
+        }
+
 
         document.getElementById('next-question').addEventListener('click', question_update);
         document.getElementById('submit-answer').addEventListener('click', question_check);
+        //document.getElementById('revoke-history').addEventListener('click', history_revoke);
+
 
         question_init();
 
