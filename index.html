@@ -30,15 +30,30 @@
             width: 100%;
             background-color: #e0e0e0;
             border-radius: 25px;
-            margin: 20px 0;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            height: 20px;
         }
 
-        #progress-bar {
+        #progress-bar-visited {
             height: 20px;
             width: 0%;
             background-color: #76c7c0;
             border-radius: 25px;
             transition: width 0.5s;
+            position: absolute;
+            z-index: 0;
+        }
+
+        #progress-bar-completed {
+            height: 20px;
+            width: 0%;
+            background-color: #4caf50;
+            border-radius: 25px;
+            transition: width 0.5s;
+            position: absolute;
+            z-index: 1;
         }
     </style>
 </head>
@@ -48,9 +63,9 @@
     <div id="overall-stats"></div>
 
     <div id="progress-container">
-        <div id="progress-bar"></div>
+        <div id="progress-bar-completed"></div>
+        <div id="progress-bar-visited"></div>
     </div>
-
 
     <button id="next-question">下一题</button>
 
@@ -66,7 +81,6 @@
     <div id="message">The question bank is not empty!</div>
 
     <button id="clear-cache">清空缓存</button>
-
 
     <script>
         let questions = []; // 题库
@@ -304,15 +318,24 @@
 
             let totalQuestions = questions.length;
             let completedQuestions = Object.keys(stats).length - 1;
+            let correctQuestions = Object.values(stats).filter(stat => stat.correct > 0).length;
 
-            let progressPercentage = (completedQuestions / totalQuestions) * 100;
-            let progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = progressPercentage + '%';
-            if (completedQuestions)
-                progressBar.innerText = `已完成 ${completedQuestions} / ${totalQuestions} (${progressPercentage.toFixed(2)}%)`;
+            let progressVisitedPercentage = (completedQuestions / totalQuestions) * 100;
+            let progressCompletedPercentage = (correctQuestions / totalQuestions) * 100;
+
+            let progressBarVisited = document.getElementById('progress-bar-visited');
+            let progressBarCompleted = document.getElementById('progress-bar-completed');
+
+            progressBarVisited.style.width = progressVisitedPercentage + '%';
+            // progressBarVisited.innerText = `已浏览 ${completedQuestions} / ${totalQuestions} (${progressVisitedPercentage.toFixed(2)}%)`;
+
+            progressBarCompleted.style.width = progressCompletedPercentage + '%';
+            if (correctQuestions)
+                progressBarCompleted.innerText = `已做对 ${correctQuestions} / ${totalQuestions} (${progressCompletedPercentage.toFixed(2)}%)`;
             else
-                progressBar.innerText = null;
+                progressBarCompleted.innerText = null;
         }
+
 
         document.getElementById('next-question').addEventListener('click', question_next);
         document.getElementById('submit-answer').addEventListener('click', question_check);
