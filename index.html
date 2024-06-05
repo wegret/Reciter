@@ -54,6 +54,7 @@
             transition: width 0.5s;
             position: absolute;
             z-index: 1;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -330,10 +331,8 @@
             // progressBarVisited.innerText = `已浏览 ${completedQuestions} / ${totalQuestions} (${progressVisitedPercentage.toFixed(2)}%)`;
 
             progressBarCompleted.style.width = progressCompletedPercentage + '%';
-            if (correctQuestions)
-                progressBarCompleted.innerText = `已做对 ${correctQuestions} / ${totalQuestions} (${progressCompletedPercentage.toFixed(2)}%)`;
-            else
-                progressBarCompleted.innerText = null;
+            progressBarCompleted.innerText = `${correctQuestions} / ${totalQuestions} (${progressCompletedPercentage.toFixed(2)}%)`;
+            
         }
 
 
