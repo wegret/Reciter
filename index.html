@@ -354,12 +354,7 @@
             }
             else {
                 // 添加做错的题目
-                //    if (!question_wrong.some(question => question.id === questionId)) {   // 允许多次添加
-                const wrongQuestion = questions.find(question => question.id === questionId);
-                if (wrongQuestion) {
-                    question_wrong.push(wrongQuestion);
-                }
-                //    }
+                question_wrong.push(questions.find(question => question.id === questionId));
             }
 
             localStorage.setItem('quiz_stats', JSON.stringify(stats));
