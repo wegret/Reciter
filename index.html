@@ -196,8 +196,7 @@
                 // 1/4的概率从错题集中抽题
                 const index = Math.floor(Math.random() * question_wrong.length);
                 return question_wrong[index];
-            } else if (randomNum < (1 / 2 + 1 / p_wrong) && questionsNeverCorrect.length > 0) {
-                // 如果存在没有答对过的题目，1/2的概率从这些题目中抽取
+            } else if (questionsNeverCorrect.length > 0) {
                 const index = Math.floor(Math.random() * questionsNeverCorrect.length);
                 return questionsNeverCorrect[index];
             } else {
