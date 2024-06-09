@@ -100,7 +100,9 @@
         <button id="prev-question">上一题</button>
         <div id="message">The question bank is not empty!</div>
 
+        <!--
         <button id="clear-cache">清空缓存</button>
+        -->
     </div>
 
     <script>
@@ -122,7 +124,7 @@
                 alert('缓存已清空');
             }
         }
-        document.getElementById('clear-cache').addEventListener('click', clearCache);
+        //document.getElementById('clear-cache').addEventListener('click', clearCache);
 
         async function question_init() {
             try {
@@ -182,17 +184,29 @@
         }
 
         /* 随机返回题目 */
-        const p_wrong = 3;    // 1/3的概率，从错题里面抽题
+        const p_wrong = 4;    // 1/4的概率，从错题里面抽题
         function question_random() {
             let randomNum = Math.random();
+            let questionsNeverCorrect = questions.filter(q => {
+                let stats = JSON.parse(localStorage.getItem('quiz_stats'));
+                return stats && stats[q.id] && stats[q.id].correct === 0;
+            });
+
             if (randomNum < 1 / p_wrong && question_wrong.length > 0) {
+                // 1/4的概率从错题集中抽题
                 const index = Math.floor(Math.random() * question_wrong.length);
                 return question_wrong[index];
+            } else if (randomNum < 1 / 2 && questionsNeverCorrect.length > 0) {
+                // 如果存在没有答对过的题目，1/2的概率从这些题目中抽取
+                const index = Math.floor(Math.random() * questionsNeverCorrect.length);
+                return questionsNeverCorrect[index];
             } else {
+                // 剩下的概率随机从所有题目中抽取
                 const index = Math.floor(Math.random() * questions.length);
                 return questions[index];
             }
         }
+
 
         /* 返回上一题 */
         function question_back() {
